@@ -1,11 +1,28 @@
 {
   "name": "hello-qql",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JanneSuotsalo/School_GraphQL_Exercise.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JanneSuotsalo/School_GraphQL_Exercise/issues"
+  },
+  "homepage": "https://github.com/JanneSuotsalo/School_GraphQL_Exercise#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-graphql": "^0.9.0",
+    "graphql": "^15.0.0",
+    "mongoose": "^5.9.7"
+  },
+  "devDependencies": {},
+  "description": ""
 }
