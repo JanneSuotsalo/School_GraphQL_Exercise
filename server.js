@@ -1,8 +1,10 @@
 "use strict";
 
+require("dotenv").config();
 const express = require("express");
 const graphqlHTTP = require("express-graphql");
 const MyGraphQLSchema = require("./schema/schema");
+const db = require("./db/db");
 
 const app = express();
 
@@ -14,4 +16,6 @@ app.use(
   })
 );
 
-app.listen(3000);
+db.on("connected", () => {
+  app.listen(3000);
+});
