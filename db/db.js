@@ -1,5 +1,6 @@
 //module is in strict mode by default ;)
 const mongoose = require("mongoose");
+mongoose.set("useFindAndModify", false);
 
 (async () => {
   try {
