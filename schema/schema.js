@@ -179,8 +179,9 @@ const Mutation = new GraphQLObjectType({
         animalName: { type: GraphQLString },
         species: { type: GraphQLID }
       },
-      resolve: async (parent, args) => {
+      resolve: async (parent, args, { req, res, checkAuth }) => {
         try {
+          checkAuth(req, res);
           return await animal.findByIdAndUpdate(args.id, args, { new: true });
         } catch (e) {
           return new Error(e.message);
