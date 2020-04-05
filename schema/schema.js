@@ -123,24 +123,6 @@ const typeOfLevel = new GraphQLObjectType({
   }),
 });
 
-// Used to help adding connections when adding stations
-const connectionInputType = new GraphQLInputObjectType({
-  name: "connectionsinput",
-  description: "defines connection ID inputs",
-  fields: () => ({
-    ConnectionTypeID: {
-      type: GraphQLID,
-    },
-    LevelID: {
-      type: GraphQLID,
-    },
-    CurrentTypeID: {
-      type: GraphQLID,
-    },
-    Quantity: { type: GraphQLInt },
-  }),
-});
-
 // Used in "addStation" to make everything look more clear
 const stationInputType = new GraphQLInputObjectType({
   name: "stationInput",
@@ -181,7 +163,6 @@ const RootQuery = new GraphQLObjectType({
         bounds: { type: GraphQLString },
       },
       resolve: async (parent, args) => {
-        console.log(args.bounds);
         try {
           let southWest;
           let northEast;
@@ -193,7 +174,6 @@ const RootQuery = new GraphQLObjectType({
           if (args.bounds != undefined) {
             let bounds = JSON.parse(args.bounds);
             southWest = bounds._southWest;
-            console.log("test" + southWest);
             northEast = bounds._northEast;
 
             return await station
@@ -316,7 +296,7 @@ const Mutation = new GraphQLObjectType({
       },
       resolve: async (parent, args) => {
         try {
-          return await station.findOneAndDelete(args.id);
+          return await station.findByIdAndDelete(args.id);
         } catch (e) {
           return new Error(e.message);
         }
