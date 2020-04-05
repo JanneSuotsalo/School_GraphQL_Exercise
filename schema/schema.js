@@ -123,11 +123,11 @@ const typeOfLevel = new GraphQLObjectType({
   }),
 });
 
+// Used to help adding connections when adding stations
 const connectionInputType = new GraphQLInputObjectType({
   name: "connectionsinput",
-  description: "defines connection input",
+  description: "defines connection ID inputs",
   fields: () => ({
-    id: { type: GraphQLID },
     ConnectionTypeID: {
       type: GraphQLID,
     },
@@ -173,7 +173,7 @@ const RootQuery = new GraphQLObjectType({
   description: "Main query",
   fields: {
     stations: {
-      type: new GraphQLNonNull(GraphQLList(stationType)),
+      type: new GraphQLList(stationType),
       description: "Get all stations",
       args: {
         limit: { type: GraphQLInt },
@@ -181,6 +181,7 @@ const RootQuery = new GraphQLObjectType({
         bounds: { type: GraphQLString },
       },
       resolve: async (parent, args) => {
+        console.log(args.bounds);
         try {
           let southWest;
           let northEast;
