@@ -5,8 +5,6 @@ const {
   GraphQLList,
   GraphQLNonNull,
   GraphQLSchema,
-  GraphQLBoolean,
-  GraphQLFloat,
   GraphQLInt,
   GraphQLInputObjectType,
 } = require("graphql");
@@ -56,7 +54,7 @@ const connectionType = new GraphQLObjectType({
   description: "Connections of stations",
   fields: () => ({
     Quantity: { type: GraphQLString },
-
+    id: { type: GraphQLID },
     ConnectionTypeID: {
       type: typeOfConnection,
       resolve: async (parent, args) => {
@@ -123,7 +121,7 @@ const typeOfLevel = new GraphQLObjectType({
   }),
 });
 
-// Used in "addStation" to make everything look more clear
+// station input type, used in adding and modifying stations
 const stationInputType = new GraphQLInputObjectType({
   name: "stationInput",
   description: "Input for adding a station",
@@ -142,7 +140,7 @@ const stationInputType = new GraphQLInputObjectType({
         fields: () => ({
           type: { type: GraphQLString },
           coordinates: {
-            type: new GraphQLList(GraphQLString), //first is longitude, second latitude
+            type: new GraphQLList(GraphQLString),
           },
         }),
       }),
@@ -256,15 +254,17 @@ const Mutation = new GraphQLObjectType({
   name: "MutationType",
   description: "Mutations...",
   fields: {
+    // Adding station example query example:
+    // addStation(stationInput:{...
     addStation: {
       type: stationType,
       description: "Add station",
       args: {
-        input: { type: stationInputType },
+        stationInput: { type: stationInputType },
       },
       resolve: async (parent, args) => {
         try {
-          const newStation = new station(args.input);
+          const newStation = new station(args.stationInput);
           return await newStation.save();
         } catch (e) {
           return new Error(e.message);
@@ -272,16 +272,18 @@ const Mutation = new GraphQLObjectType({
       },
     },
 
+    // Modify station query example:
+    // modifyStation(id: "5e89cfe31e92be013009fd7b", stationInput: {Town: "new test town"})
     modifyStation: {
       type: stationType,
       description: "Modify station by ID",
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        input: { type: stationInputType },
+        stationInput: { type: stationInputType },
       },
       resolve: async (parent, args) => {
         try {
-          return await station.findByIdAndUpdate(args.id, args.input, {
+          return await station.findByIdAndUpdate(args.id, args.stationInput, {
             new: true,
           });
         } catch (e) {
