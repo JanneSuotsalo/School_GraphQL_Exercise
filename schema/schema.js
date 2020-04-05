@@ -171,6 +171,8 @@ const RootQuery = new GraphQLObjectType({
             args.limit = 10;
           }
 
+          /* Query to get with polygon: 
+          stations(bounds: "{\"_southWest\": {\"lat\": 60.0918986743294, \"lng\": 24.94319519042969}, \"_northEast\": {\"lat\": 60.38196898834704, \"lng\": 24.94033813476563}}")*/
           if (args.bounds != undefined) {
             let bounds = JSON.parse(args.bounds);
             southWest = bounds._southWest;
