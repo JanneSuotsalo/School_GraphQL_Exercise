@@ -4,194 +4,327 @@ const {
   GraphQLString,
   GraphQLList,
   GraphQLNonNull,
-  GraphQLSchema
+  GraphQLSchema,
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLInputObjectType,
 } = require("graphql");
 
-const category = require("../models/category");
-const species = require("../models/species");
-const animal = require("../models/animal");
+const connection = require("../models/connection");
+const connectionTypeId = require("../models/connectionType");
+const currentType = require("../models/currentType");
+const level = require("../models/level");
+const station = require("../models/station");
 
-const animalType = new GraphQLObjectType({
-  name: "animal",
-  description: "Animal name and species",
+const stationType = new GraphQLObjectType({
+  name: "station",
+  description: "Info about station",
   fields: () => ({
     id: { type: GraphQLID },
-    animalName: { type: GraphQLString },
-    species: {
-      type: speciesType,
+    Title: { type: GraphQLString },
+    AddressLine1: { type: GraphQLString },
+    Town: { type: GraphQLString },
+    StateOrProvince: { type: GraphQLString },
+    Postcode: { type: GraphQLString },
+
+    Connections: {
+      type: connectionType,
       resolve: async (parent, args) => {
         try {
-          return await species.findById(parent.species);
+          return await connection.findById(parent.Connections);
         } catch (e) {
           return new Error(e.message);
         }
-      }
-    }
-  })
+      },
+    },
+
+    Location: {
+      type: new GraphQLObjectType({
+        name: "loc",
+        fields: () => ({
+          type: { type: GraphQLString },
+          coordinates: { type: GraphQLList(GraphQLString) },
+        }),
+      }),
+    },
+  }),
 });
 
-const speciesType = new GraphQLObjectType({
-  name: "species",
-  description: "Animal species",
+const connectionType = new GraphQLObjectType({
+  name: "connections",
+  description: "Connections of stations",
   fields: () => ({
-    id: { type: GraphQLID },
-    speciesName: { type: GraphQLString },
-    category: {
-      type: categoryType,
+    Quantity: { type: GraphQLString },
+
+    ConnectionTypeID: {
+      type: typeOfConnection,
       resolve: async (parent, args) => {
         try {
-          return await category.findById(parent.category);
+          return await connectionTypeId.findById(parent.ConnectionTypeID);
         } catch (e) {
           return new Error(e.message);
         }
-      }
-    }
-  })
+      },
+    },
+
+    CurrentTypeID: {
+      type: typeOfCurrent,
+      resolve: async (parent, args) => {
+        try {
+          return await currentType.findById(parent.CurrentTypeID);
+        } catch (e) {
+          return new Error(e.message);
+        }
+      },
+    },
+
+    LevelID: {
+      type: typeOfLevel,
+      resolve: async (parent, args) => {
+        try {
+          return await level.findById(parent.LevelID);
+        } catch (e) {
+          return new Error(e.message);
+        }
+      },
+    },
+  }),
 });
 
-const categoryType = new GraphQLObjectType({
-  name: "category",
-  description: "Animal category",
+const typeOfConnection = new GraphQLObjectType({
+  name: "connectionType",
+  description: "Describes what type of connection",
   fields: () => ({
     id: { type: GraphQLID },
-    categoryName: { type: GraphQLString }
-  })
+    FormalName: { type: GraphQLString },
+    Title: { type: GraphQLString },
+  }),
+});
+
+const typeOfCurrent = new GraphQLObjectType({
+  name: "currentType",
+  description: "Describes the current type",
+  fields: () => ({
+    id: { type: GraphQLID },
+    Description: { type: GraphQLString },
+    Title: { type: GraphQLString },
+  }),
+});
+
+const typeOfLevel = new GraphQLObjectType({
+  name: "level",
+  description: "Describes the connection level",
+  fields: () => ({
+    id: { type: GraphQLID },
+    Comments: { type: GraphQLString },
+    IsFastChargeCapable: { type: GraphQLString },
+    Title: { type: GraphQLString },
+  }),
+});
+
+const connectionInputType = new GraphQLInputObjectType({
+  name: "connectionsinput",
+  description: "defines connection input",
+  fields: () => ({
+    id: { type: GraphQLID },
+    ConnectionTypeID: {
+      type: GraphQLID,
+    },
+    LevelID: {
+      type: GraphQLID,
+    },
+    CurrentTypeID: {
+      type: GraphQLID,
+    },
+    Quantity: { type: GraphQLInt },
+  }),
+});
+
+// Used in "addStation" to make everything look more clear
+const stationInputType = new GraphQLInputObjectType({
+  name: "stationInput",
+  description: "Input for adding a station",
+  fields: () => ({
+    Connections: { type: GraphQLID },
+
+    Postcode: { type: GraphQLString },
+    Title: { type: GraphQLString },
+    AddressLine1: { type: GraphQLString },
+    StateOrProvince: { type: GraphQLString },
+    Town: { type: GraphQLString },
+
+    Location: {
+      type: new GraphQLInputObjectType({
+        name: "location",
+        fields: () => ({
+          type: { type: GraphQLString },
+          coordinates: {
+            type: new GraphQLList(GraphQLString), //first is longitude, second latitude
+          },
+        }),
+      }),
+    },
+  }),
 });
 
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
   description: "Main query",
   fields: {
-    animals: {
-      type: new GraphQLNonNull(GraphQLList(animalType)),
-      description: "Get all animals",
-      resolve: async (parent, args) => {
-        try {
-          return await animal.find();
-        } catch (e) {
-          return new Error(e.message);
-        }
-      }
-    },
-
-    animal: {
-      type: animalType,
-      description: "Get animal by id",
+    stations: {
+      type: new GraphQLNonNull(GraphQLList(stationType)),
+      description: "Get all stations",
       args: {
-        id: { type: new GraphQLNonNull(GraphQLID) }
+        limit: { type: GraphQLInt },
+        start: { type: GraphQLInt },
+        bounds: { type: GraphQLString },
       },
       resolve: async (parent, args) => {
         try {
-          return await animal.findById(args.id);
+          let southWest;
+          let northEast;
+
+          if (args.limit == undefined) {
+            args.limit = 10;
+          }
+
+          if (args.bounds != undefined) {
+            let bounds = JSON.parse(args.bounds);
+            southWest = bounds._southWest;
+            console.log("test" + southWest);
+            northEast = bounds._northEast;
+
+            return await station
+              .find()
+              .where("Location")
+              .within({
+                box: [
+                  [southWest.lng, southWest.lat],
+                  [northEast.lng, northEast.lat],
+                ],
+              });
+          } else {
+            return await station
+              .find()
+              .limit(Number.parseInt(args.limit))
+              .skip(Number.parseInt(args.start));
+          }
         } catch (e) {
           return new Error(e.message);
         }
-      }
+      },
     },
 
-    categories: {
-      type: new GraphQLNonNull(GraphQLList(categoryType)),
-      description: "Get all categories",
+    station: {
+      type: stationType,
+      description: "Get station by id",
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLID) },
+      },
       resolve: async (parent, args) => {
         try {
-          return await category.find();
+          return await station.findById(args.id);
         } catch (e) {
           return new Error(e.message);
         }
-      }
+      },
     },
 
-    species: {
-      type: new GraphQLNonNull(GraphQLList(speciesType)),
-      description: "Get all species",
+    connectiontypes: {
+      type: new GraphQLNonNull(GraphQLList(typeOfConnection)),
+      description: "Get all connection types",
       resolve: async (parent, args) => {
         try {
-          return await species.find();
+          return await connectionTypeId.find();
         } catch (e) {
           return new Error(e.message);
         }
-      }
-    }
-  }
+      },
+    },
+
+    currenttypes: {
+      type: new GraphQLNonNull(GraphQLList(typeOfCurrent)),
+      description: "Get all current types",
+      resolve: async (parent, args) => {
+        try {
+          return await currentType.find();
+        } catch (e) {
+          return new Error(e.message);
+        }
+      },
+    },
+
+    leveltypes: {
+      type: new GraphQLNonNull(GraphQLList(typeOfLevel)),
+      description: "Get all levels",
+      resolve: async (parent, args) => {
+        try {
+          return await level.find();
+        } catch (e) {
+          return new Error(e.message);
+        }
+      },
+    },
+  },
 });
 
 const Mutation = new GraphQLObjectType({
   name: "MutationType",
   description: "Mutations...",
   fields: {
-    addCategory: {
-      type: categoryType,
-      description: "Add animal category like Fish, Mammal, etc.",
+    addStation: {
+      type: stationType,
+      description: "Add station",
       args: {
-        categoryName: { type: new GraphQLNonNull(GraphQLString) }
+        input: { type: stationInputType },
       },
       resolve: async (parent, args) => {
         try {
-          const newCategory = new category({
-            categoryName: args.categoryName
-          });
-          return await newCategory.save();
+          const newStation = new station(args.input);
+          return await newStation.save();
         } catch (e) {
           return new Error(e.message);
         }
-      }
-    },
-
-    addSpecies: {
-      type: speciesType,
-      description: "Add animal species like Cat, Dog, etc. and category id",
-      args: {
-        speciesName: { type: new GraphQLNonNull(GraphQLString) },
-        category: { type: new GraphQLNonNull(GraphQLID) }
       },
-      resolve: async (parent, args) => {
-        try {
-          const newSpecies = new species(args);
-          return await newSpecies.save();
-        } catch (e) {
-          return new Error(e.message);
-        }
-      }
     },
 
-    addAnimal: {
-      type: animalType,
-      description: "Add animal like Frank, John, etc. and species id",
-      args: {
-        animalName: { type: new GraphQLNonNull(GraphQLString) },
-        species: { type: new GraphQLNonNull(GraphQLID) }
-      },
-      resolve: async (parent, args) => {
-        try {
-          const newAnimal = new animal(args);
-          return await newAnimal.save();
-        } catch (e) {
-          return new Error(e.message);
-        }
-      }
-    },
-
-    modifyAnimal: {
-      type: animalType,
-      description: "Modify animal name and species",
+    modifyStation: {
+      type: stationType,
+      description: "Modify station by ID",
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        animalName: { type: GraphQLString },
-        species: { type: GraphQLID }
+        input: { type: stationInputType },
       },
-      resolve: async (parent, args, { req, res, checkAuth }) => {
+      resolve: async (parent, args) => {
         try {
-          checkAuth(req, res);
-          return await animal.findByIdAndUpdate(args.id, args, { new: true });
+          return await station.findByIdAndUpdate(args.id, args.input, {
+            new: true,
+          });
         } catch (e) {
           return new Error(e.message);
         }
-      }
-    }
-  }
+      },
+    },
+
+    deleteStation: {
+      type: stationType,
+      description: "Delete a station by ID",
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLID) },
+      },
+      resolve: async (parent, args) => {
+        try {
+          return await station.findOneAndDelete(args.id);
+        } catch (e) {
+          return new Error(e.message);
+        }
+      },
+    },
+  },
 });
 
 module.exports = new GraphQLSchema({
   query: RootQuery,
-  mutation: Mutation
+  mutation: Mutation,
 });
