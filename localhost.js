@@ -18,7 +18,7 @@ module.exports = (app, httpsPort, httpPort) => {
   http
     .createServer((req, res) => {
       res.writeHead(301, {
-        Location: "https://localhost:" + httpsPort + req.url,
+        Location: "https://localhost:8000" + req.url,
       });
       res.end();
     })
