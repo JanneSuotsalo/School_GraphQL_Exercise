@@ -21,6 +21,14 @@ app.use("/connectionType", connectionTypeRoute);
 app.use("/currentType", currentTypeRoute);
 app.use("/level", levelRoute);
 
+app.get("/test", async (req, res) => {
+  if (req.secure) {
+    console.log("someone visited my url with secure https");
+  } else {
+    console.log("someone visited my url with normal http");
+  }
+});
+
 app.use("/graphql", (req, res) => {
   graphqlHTTP({
     schema: MyGraphQLSchema,
@@ -29,32 +37,14 @@ app.use("/graphql", (req, res) => {
 });
 
 db.on("connected", () => {
-  app.listen(3000);
+  process.env.NODE_ENV = process.env.NODE_ENV || "development";
+  if (process.env.NODE_ENV === "production") {
+    const prod = require("./production")(app, process.env.PORT);
+  } else {
+    const localhost = require("./localhost")(
+      app,
+      process.env.HTTPS_PORT,
+      process.env.HTTP_PORT
+    );
+  }
 });
-
-/* 
-const authRoute = require("./routes/authRoute");
-const passport = require("./utils/pass");
-const cors = require("cors");
-
-app.use(cors());
-
-// dummy function to set user (irl: e.g. passport-local)
-const auth = (req, res, next) => {
-  req.user = false;
-  next();
-};
-
-// dummy function to check authentication (irl: e.g. passport-jwt)
-const checkAuth = (req, res) => {
-  passport.authenticate("jwt", { session: false }, (err, user) => {
-    if (err || !user) {
-      throw new Error("Not authenticated");
-    }
-  })(req, res);
-};
-
-//app.use(auth);
-//app.post(auth);
-
-app.use("/auth", authRoute); */
