@@ -39,15 +39,21 @@ passport.use(
       jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
       secretOrKey: "asd123",
     },
-    (jwtPayload, done) => {
+    async (jwtPayload, done) => {
       console.log("payload", jwtPayload);
       //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
-      const user = userModel.findById(jwtPayload.id);
-      console.log("pl user", user);
-      if (user) {
+      try {
+        const user = await userModel.findById(jwtPayload._id);
+        console.log("pl user", user);
         delete user.password;
-        return done(null, user);
-      } else {
+        const strippedUser = {
+          _id: user._id,
+          email: user.email,
+          full_name: user.full_name,
+        };
+        console.log("str user", strippedUser);
+        return done(null, strippedUser);
+      } catch (e) {
         return done(null, false);
       }
     }

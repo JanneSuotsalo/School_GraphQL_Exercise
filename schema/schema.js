@@ -262,8 +262,9 @@ const Mutation = new GraphQLObjectType({
       args: {
         stationInput: { type: stationInputType },
       },
-      resolve: async (parent, args) => {
+      resolve: async (parent, args, { req, res, checkAuth }) => {
         try {
+          checkAuth(req, res);
           const newStation = new station(args.stationInput);
           return await newStation.save();
         } catch (e) {
@@ -281,8 +282,9 @@ const Mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         stationInput: { type: stationInputType },
       },
-      resolve: async (parent, args) => {
+      resolve: async (parent, args, { req, res, checkAuth }) => {
         try {
+          checkAuth(req, res);
           return await station.findByIdAndUpdate(args.id, args.stationInput, {
             new: true,
           });
@@ -298,8 +300,9 @@ const Mutation = new GraphQLObjectType({
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve: async (parent, args) => {
+      resolve: async (parent, args, { req, res, checkAuth }) => {
         try {
+          checkAuth(req, res);
           return await station.findByIdAndDelete(args.id);
         } catch (e) {
           return new Error(e.message);

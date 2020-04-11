@@ -53,7 +53,7 @@ app.use("/level", levelRoute);
 /*const auth = (req, res, next) => {
   req.user = false;
   next();
-};
+};*/
 
 // dummy function to check authentication (irl: e.g. passport-jwt)
 const checkAuth = (req, res) => {
@@ -62,7 +62,7 @@ const checkAuth = (req, res) => {
       throw new Error("Not authenticated");
     }
   })(req, res);
-};*/
+};
 
 //app.use(auth);
 //app.post(auth);
@@ -70,19 +70,19 @@ const checkAuth = (req, res) => {
 app.use("/auth", authRoute);
 app.use("/user", userRoute);
 
-app.get("/test", async (req, res) => {
+/*app.get("/test", async (req, res) => {
   if (req.secure) {
     console.log("someone visited my url with secure https");
   } else {
     console.log("someone visited my url with normal http");
   }
-});
+});*/
 
 app.use("/graphql", (req, res) => {
   graphqlHTTP({
     schema: MyGraphQLSchema,
     graphiql: true,
-    //context: {req,res,checkAuth}
+    context: { req, res, checkAuth },
   })(req, res);
 });
 
