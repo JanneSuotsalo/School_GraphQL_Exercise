@@ -22,6 +22,17 @@ app.use(cors());
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
+process.env.NODE_ENV = process.env.NODE_ENV || "development";
+if (process.env.NODE_ENV === "production") {
+  const prod = require("./production")(app, process.env.PORT);
+} else {
+  const localhost = require("./localhost")(
+    app,
+    process.env.HTTPS_PORT,
+    process.env.HTTP_PORT
+  );
+}
+
 // normally, that's the user create/update route
 /*app.get("/", async (req, res) => {
   const hash = await bcrypt.hash("qwer", saltRound);
@@ -70,14 +81,5 @@ app.use("/graphql", (req, res) => {
 });
 
 db.on("connected", () => {
-  process.env.NODE_ENV = process.env.NODE_ENV || "development";
-  if (process.env.NODE_ENV === "production") {
-    const prod = require("./production")(app, process.env.PORT);
-  } else {
-    const localhost = require("./localhost")(
-      app,
-      process.env.HTTPS_PORT,
-      process.env.HTTP_PORT
-    );
-  }
+  console.log("db connected...");
 });
