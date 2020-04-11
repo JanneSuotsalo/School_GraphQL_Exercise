@@ -15,10 +15,13 @@ const levelRoute = require("./routes/levelRoute");
 const authRoute = require("./routes/authRoute");
 const passport = require("./utils/pass");
 const cors = require("cors");
+const helmet = require("helmet");
+
 //const bcrypt = require("bcrypt");
 //const saltRound = 12;
 
 app.use(cors());
+app.use(helmet());
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
@@ -46,7 +49,7 @@ app.use("/currentType", currentTypeRoute);
 app.use("/level", levelRoute);
 
 // dummy function to set user (irl: e.g. passport-local)
-const auth = (req, res, next) => {
+/*const auth = (req, res, next) => {
   req.user = false;
   next();
 };
@@ -58,7 +61,7 @@ const checkAuth = (req, res) => {
       throw new Error("Not authenticated");
     }
   })(req, res);
-};
+};*/
 
 //app.use(auth);
 //app.post(auth);
