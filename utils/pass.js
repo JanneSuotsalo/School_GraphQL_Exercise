@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 passport.use(
   new Strategy(async (username, password, done) => {
     try {
-      const user = await userModel.getUserLogin(username);
+      const user = await userModel.findOne({ email: username });
       console.log("Local strategy", user); // result is binary row
       if (user === undefined) {
         return done(null, false, { message: "Incorrect email." });
@@ -20,7 +20,12 @@ passport.use(
         return done(null, false, { message: "Incorrect password." });
       }
       delete user.password;
-      return done(null, { ...user }, { message: "Logged In Successfully" }); // use spread syntax to create shallow copy to get rid of binary row type
+      const strippedUser = {
+        _id: user._id,
+        email: user.email,
+        full_name: user.full_name,
+      };
+      return done(null, strippedUser, { message: "Logged In Successfully" });
     } catch (err) {
       return done(err);
     }
@@ -37,9 +42,10 @@ passport.use(
     (jwtPayload, done) => {
       console.log("payload", jwtPayload);
       //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
-      const user = userModel.getUser(jwtPayload.id);
+      const user = userModel.findById(jwtPayload.id);
       console.log("pl user", user);
       if (user) {
+        delete user.password;
         return done(null, user);
       } else {
         return done(null, false);

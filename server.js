@@ -11,6 +11,7 @@ const connectionRoute = require("./routes/connectionRoute");
 const connectionTypeRoute = require("./routes/connectionTypeRoute");
 const currentTypeRoute = require("./routes/currentTypeRoute");
 const levelRoute = require("./routes/levelRoute");
+const userRoute = require("./routes/userRoute");
 
 const authRoute = require("./routes/authRoute");
 const passport = require("./utils/pass");
@@ -67,6 +68,7 @@ const checkAuth = (req, res) => {
 //app.post(auth);
 
 app.use("/auth", authRoute);
+app.use("/user", userRoute);
 
 app.get("/test", async (req, res) => {
   if (req.secure) {
@@ -80,6 +82,7 @@ app.use("/graphql", (req, res) => {
   graphqlHTTP({
     schema: MyGraphQLSchema,
     graphiql: true,
+    //context: {req,res,checkAuth}
   })(req, res);
 });
 
