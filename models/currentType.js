@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
 const currentTypeSchema = new Schema({
-  Description: String,
-  Title: String,
+  Description : String,
+  Title : String
 });
 
-module.exports = mongoose.model("currentType", currentTypeSchema);
+module.exports = mongoose.model('CurrentType', currentTypeSchema);

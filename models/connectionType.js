@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
 const connectionTypeSchema = new Schema({
-  FormalName: String,
-  Title: String,
+  FormalName : String,
+  Title : String
 });
 
-module.exports = mongoose.model("connectionType", connectionTypeSchema);
+module.exports = mongoose.model('ConnectionType', connectionTypeSchema);

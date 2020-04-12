@@ -1,17 +1,14 @@
-//module is in strict mode by default ;)
-const mongoose = require("mongoose");
-mongoose.set("useFindAndModify", false);
+const mongoose = require('mongoose');
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 
-(async () => {
-  try {
-    await mongoose.connect(process.env.DB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log("DB connected successfully");
-  } catch (err) {
-    console.error("Connection to db failed", err);
-  }
-})();
+console.log(process.env.DB_URL);
+
+mongoose.connect(process.env.DB_URL,
+    {useNewUrlParser: true, useUnifiedTopology: true}).then(() => {
+  console.log('Connected successfully.');
+}, err => {
+  console.log('Connection to db failed: ' + err);
+});
 
 module.exports = mongoose.connection;
