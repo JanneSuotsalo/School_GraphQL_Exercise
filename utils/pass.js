@@ -12,7 +12,7 @@ passport.use(
   new Strategy(async (username, password, done) => {
     try {
       const user = await userModel.findOne({ email: username });
-      console.log("Local strategy", user); // result is binary row
+      //console.log("Local strategy", user); // result is binary row
       if (user === undefined) {
         return done(null, false, { message: "Incorrect email." });
       }
@@ -40,18 +40,18 @@ passport.use(
       secretOrKey: "asd123",
     },
     async (jwtPayload, done) => {
-      console.log("payload", jwtPayload);
+      //console.log("payload", jwtPayload);
       //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
       try {
         const user = await userModel.findById(jwtPayload._id);
-        console.log("pl user", user);
+        //console.log("pl user", user);
         delete user.password;
         const strippedUser = {
           _id: user._id,
           email: user.email,
           full_name: user.full_name,
         };
-        console.log("str user", strippedUser);
+        //console.log("str user", strippedUser);
         return done(null, strippedUser);
       } catch (e) {
         return done(null, false);
